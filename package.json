@@ -1,0 +1,36 @@
+{
+  "name": "react-native-meteor-redux",
+  "version": "1.0.0",
+  "description": "Link react-native-meteor to redux",
+  "main": "connectMeteorRedux.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DesignmanIO/react-native-meteor-redux.git"
+  },
+  "keywords": [
+    "react",
+    "native",
+    "react",
+    "native",
+    "meteor",
+    "redux",
+    "react",
+    "native",
+    "meteor",
+    "redux"
+  ],
+  "author": "Designman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DesignmanIO/react-native-meteor-redux/issues"
+  },
+  "homepage": "https://github.com/DesignmanIO/react-native-meteor-redux#readme",
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "react-native-meteor": "^1.0.3",
+    "redux": "^3.6.0"
+  }
+}
