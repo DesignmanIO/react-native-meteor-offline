@@ -31,6 +31,8 @@ export {MeteorStore}
 ````
 
 ### Using cached collection
+Note that this currently returns all documents, and find queries won't work. I hope to fix that soon.
+
 ````javascript
 import {returnCached} from 'react-native-meteor-redux';
 import {MeteorStore} from '../myReduxStuff';
