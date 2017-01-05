@@ -98,10 +98,9 @@ const subscribeCached = (name) => {
 
 returnCached = (cursor, store, collectionName) => {
   if(Meteor.ddp && Meteor.ddp.status === 'disconnected'){
-    return store.getState()[collectionName];
-  } else {
-    cursor;
+    return store.getState()[collectionName] || [];
   }
+  return cursor;
 }
 
 export {meteorReduxReducers, subscribeCached, returnCached};

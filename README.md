@@ -16,7 +16,9 @@ export {MeteorStore};
 
 ## With Redux Persist
 
+### Initializing
 ````javascript
+// myReduxStuff.js
 import initMeteorRedux from 'react-native-meteor-redux';
 import {AsyncStorage} from 'react-native';
 import {persistStore, autoRehydrate} form 'redux-persist';
@@ -24,4 +26,33 @@ import {persistStore, autoRehydrate} form 'redux-persist';
 const MeteorStore = initMeteorRedux(null, autoRehydrate());
 
 persistStore(MeteorStore, {storage: AsyncStorage});
+
+export {MeteorStore}
+````
+
+### Using cached collection
+````javascript
+import {returnCached} from 'react-native-meteor-redux';
+import {MeteorStore} from '../myReduxStuff';
+import Meteor, {createContainer} from 'react-native-meteor';
+
+const component = (props) => {
+  const {docs} = props;
+  return (
+    <View>
+      {
+        docs.map((doc) => {
+          <Text>{doc.title}, </Text>
+        });
+      }
+    </View>
+  )
+}
+
+export createContainer((props) => {
+  const sub = Meteor.subscribe('example');
+  return {
+    docs: returnCached(Meteor.collection('docs').find({}), MeteorStore, 'docs');
+  };
+}, component)
 ````
