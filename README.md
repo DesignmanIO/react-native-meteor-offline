@@ -15,7 +15,7 @@ export {MeteorStore};
 ````
 
 ## With Redux Persist
-! Note, this appears to be currently broken
+**Note, this appears to be currently broken**
 
 ````javascript
 import initMeteorRedux from 'react-native-meteor-redux';

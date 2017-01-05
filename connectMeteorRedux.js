@@ -44,6 +44,10 @@ const meteorReduxReducers = (state = {}, action) => {
       }
       console.error(`Couldn't remove ${id}, not found in ${collection} collection`);
       return state;
+    case 'persist/REHYDRATE':
+    if(typeof Meteor.ddp === undefined || Meteor.ddp.status === "disconnected"){
+      return action.payload;
+    }
     default:
       return state;
   }
