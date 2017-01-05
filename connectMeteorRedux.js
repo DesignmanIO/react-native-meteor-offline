@@ -96,11 +96,11 @@ const subscribeCached = (name) => {
   return Meteor.subscribe(name, arguments)
 }
 
-returnCached = (cursorFunction, store, collectionName) => {
+returnCached = (cursor, store, collectionName) => {
   if(Meteor.ddp && Meteor.ddp.status === 'disconnected'){
     return store.getState()[collectionName];
   } else {
-    cursorFunction();
+    cursor;
   }
 }
 
