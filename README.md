@@ -5,17 +5,18 @@ Links react-native-meteor to redux
 `npm install react-native-meteor-redux`
 
 ## Use
+At it's basic level, `react-native-meteor-redux` will add any documents from minimongo to redux.
 ````javascript
 import initMeteorRedux from 'react-native-meteor-redux';
 
 const MeteorStore = initMeteorRedux(initialState, enhancers);
 
-// Now you can use MeteorStore as a redux store throughout your app.
+// Now you can access MeteorStore as a redux store throughout your app.
 export {MeteorStore};
 ````
 
 ## With Redux Persist
-
+The real purpose of this package is to allow persisting through `redux-persist`
 ### Initializing
 ````javascript
 // myReduxStuff.js
@@ -25,7 +26,11 @@ import {persistStore, autoRehydrate} form 'redux-persist';
 
 const MeteorStore = initMeteorRedux(null, autoRehydrate());
 
-persistStore(MeteorStore, {storage: AsyncStorage});
+// Pick your storage option, I used AsyncStorage which makes sense for react-native
+persistStore(MeteorStore, {storage: AsyncStorage}, () => {
+  // Callback tells minimongo to use MeteorStore until connectivity is restored
+  MeteorStore.loaded()
+});
 
 export {MeteorStore}
 ````
@@ -34,7 +39,7 @@ export {MeteorStore}
 Note that this currently returns all documents, and find queries won't work. I hope to fix that soon.
 
 ````javascript
-import {returnCached} from 'react-native-meteor-redux';
+import {subscribeCached} from 'react-native-meteor-redux';
 import {MeteorStore} from '../myReduxStuff';
 import Meteor, {createContainer} from 'react-native-meteor';
 
@@ -52,9 +57,9 @@ const component = (props) => {
 }
 
 export createContainer((props) => {
-  const sub = Meteor.subscribe('example');
+  const sub = subscribeCached(MeteorStore, 'example', {user: 'Mikey'});
   return {
-    docs: returnCached(Meteor.collection('docs').find({}), MeteorStore, 'docs');
+    docs: Meteor.collection('docs').find({}),
   };
 }, component)
 ````

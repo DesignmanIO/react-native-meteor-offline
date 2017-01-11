@@ -1,14 +1,14 @@
 /**
  * Created by Julian on 12/30/16.
  */
-import Meteor from 'react-native-meteor';
+import Meteor, {
+    getData
+} from 'react-native-meteor';
 import {
     createStore
 } from 'redux';
 import _ from 'lodash';
-import {
-    REHYDRATE
-} from 'redux-persist/constants'
+import EventEmitter from 'events';
 
 const meteorReduxReducers = (state = {}, action) => {
     // console.log(state, action, Meteor.ddp);
@@ -53,7 +53,6 @@ const meteorReduxReducers = (state = {}, action) => {
         case 'CHANGED':
             return _.update(state, `${collection}[${docIndex}]`, (val) => {
                 return _.merge(val, fields);
-                p
             });
         case 'REMOVED':
             if (docIndex > -1) {
@@ -66,22 +65,25 @@ const meteorReduxReducers = (state = {}, action) => {
             }
             console.error(`Couldn't remove ${id}, not found in ${collection} collection`);
             return state;
-        case REHYDRATE:
-            if (action.payload && (typeof Meteor.ddp === undefined || Meteor.ddp.status === "disconnected")) {
-              if (incoming) return {
-                ...state,
-                  ...action.payload
-              };
+        case 'persist/REHYDRATE':
+            if (typeof Meteor.ddp === undefined || Meteor.ddp.status === "disconnected") {
+                return action.payload;
             }
-            return state;
         default:
             return state;
     }
 };
 
+const meteorReduxEmitter = new EventEmitter();
+
 const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
     // console.log(preloadedState, enhancer);
     const MeteorStore = createStore(meteorReduxReducers, preloadedState, enhancer);
+
+
+    MeteorStore.loaded = () => {
+        meteorReduxEmitter.emit('rehydrated');
+    };
 
     Meteor.waitDdpConnected(() => {
         // question: do I need to check for disconnection?
@@ -141,11 +143,31 @@ class MeteorStore {
     }
 }
 
-const subscribeCached = (name) => {
-    if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
-
+const subscribeCached = (store, name, ...args) => {
+    if (Meteor.ddp && Meteor.ddp.status === 'disconnected' && store.getState()) {
+        meteorReduxEmitter.on('rehydrated', () => {
+            console.log(store.getState());
+            _.each(store.getState(), (collection, key) => {
+                const onlyWithIds = _.filter(collection, (doc) => doc._id);
+                if (!getData().db[key]) {
+                    // add collection to minimongo
+                    getData().db.addCollection(key);
+                }
+                // add documents to collection
+                getData().db[key].upsert(onlyWithIds);
+            });
+            return {
+                ready: () => true,
+                offline: true
+            };
+        });
+        Meteor.waitDdpConnected(() => {
+            if (Meteor.ddp.status === 'connected') {
+                return Meteor.subscribe(name, ...args);
+            }
+        });
     }
-    return Meteor.subscribe(name, arguments)
+    return Meteor.subscribe(name, ...args);
 }
 
 returnCached = (cursor, store, collectionName) => {
