@@ -85,6 +85,19 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
         meteorReduxEmitter.emit('rehydrated');
     };
 
+    meteorReduxEmitter.once('rehydrated', () => {
+        // restore collections to minimongo
+        _.each(MeteorStore.getState(), (collection, key) => {
+            const onlyWithIds = _.filter(collection, (doc) => doc._id);
+            if (!getData().db[key]) {
+                // add collection to minimongo
+                getData().db.addCollection(key);
+            }
+            // add documents to collection
+            getData().db[key].upsert(onlyWithIds);
+        });
+    });
+
     Meteor.waitDdpConnected(() => {
         // question: do I need to check for disconnection?
         let connected = true;
@@ -144,23 +157,11 @@ class MeteorStore {
 }
 
 const subscribeCached = (store, name, ...args) => {
-    if (Meteor.ddp && Meteor.ddp.status === 'disconnected' && store.getState()) {
-        meteorReduxEmitter.on('rehydrated', () => {
-            console.log(store.getState());
-            _.each(store.getState(), (collection, key) => {
-                const onlyWithIds = _.filter(collection, (doc) => doc._id);
-                if (!getData().db[key]) {
-                    // add collection to minimongo
-                    getData().db.addCollection(key);
-                }
-                // add documents to collection
-                getData().db[key].upsert(onlyWithIds);
-            });
+    if (Meteor.ddp.status === 'disconnected') {
             return {
-                ready: () => true,
-                offline: true
+                ready: () => !!store.getState(),
+                offline: true,
             };
-        });
         Meteor.waitDdpConnected(() => {
             if (Meteor.ddp.status === 'connected') {
                 return Meteor.subscribe(name, ...args);
