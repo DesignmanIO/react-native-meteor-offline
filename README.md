@@ -36,7 +36,7 @@ export {MeteorStore}
 ````
 
 ### Using cached collection
-Note that this currently returns all documents, and find queries won't work. I hope to fix that soon.
+You should be able to find documents as normal. I'm not sure what will happen if you do updates/inserts/removes when offline, let me know what happens :)
 
 ````javascript
 import {subscribeCached} from 'react-native-meteor-redux';
