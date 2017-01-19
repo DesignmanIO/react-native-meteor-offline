@@ -57,7 +57,7 @@ const meteorReduxReducers = (state = {}, action) => {
         case 'REMOVED':
             if (docIndex > -1) {
                 // console.log('rm\'d');
-                const updatedCollection = _.filter(state[collection], (doc) => doc._id !== id);
+                const updatedCollection = state[collection].splice(docIndex);
                 return {
                     ...state,
                     [collection]: updatedCollection,
