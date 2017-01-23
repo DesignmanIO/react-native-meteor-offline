@@ -108,7 +108,6 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
             // only upsert if the data doesn't match
             if(!_.isEqual(getData().db[key], collection)){
                 // add documents to collection
-                console.log(correctedCollection);
                 getData().db[key].upsert(correctedCollection);
             }
         });
