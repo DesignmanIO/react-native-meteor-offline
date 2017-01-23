@@ -1,53 +1,45 @@
 /**
  * Created by Julian on 12/30/16.
  */
-import Meteor, {
-    getData
-} from 'react-native-meteor';
-import {
-    createStore
-} from 'redux';
+import Meteor, {getData} from 'react-native-meteor';
+import {createStore} from 'redux';
 import _ from 'lodash';
 import EventEmitter from 'events';
+import nextFrame from 'next-frame';
 
 const meteorReduxReducers = (state = {}, action) => {
     // console.log(state, action, Meteor.ddp);
-    const {
-        type,
-        collection,
-        id,
-        fields
-    } = action;
-    const docIndex = state ? _.findIndex(state[collection], {
-        _id: id
-    }) : undefined;
+    const {type, collection, id, fields} = action;
+    const docIndex = state ? _.findIndex(state[collection], {_id: id}) : undefined;
     switch (type) {
         case 'ADDED':
+            // collection doesn't exist yet, add it
             if (!state[collection]) {
                 return {
                     ...state,
-                    [collection]: [
-                        Object.assign(fields, {
-                            _id: id
-                        }),
-                    ],
+                    [collection]: Object.assign(fields, {_id: id}),
                 };
-            } else if (!_.find(state[collection], {
-                    _id: id
-                })) {
+            // no doc with _id exists yet
+            } else if (!_.find(state[collection], {_id: id})) {
                 return {
                     ...state,
                     [collection]: [
                         ...state[collection],
-                        Object.assign(fields, {
-                            _id: id
-                        }),
+                        {...Object.assign(fields, {_id: id})},
                     ],
                 };
-            } else if (_.find(state[collection], {
-                    _id: id
-                })) {
+            // duplicate found, don't insert
+            } else if (_.find(state[collection], {_id: id})) {
                 // console.warn(`${id} not added to ${collection}, duplicate found`);
+                // console.log([...updatedCollection()]);
+                const withUpdatedDoc = _.clone(state[collection]);
+                withUpdatedDoc[docIndex] = Object.assign(fields, {_id: id});
+                return {
+                  ...state,
+                    [collection]: [
+                      ...withUpdatedDoc,
+                    ]
+                }
             }
             return state;
         case 'CHANGED':
@@ -57,10 +49,10 @@ const meteorReduxReducers = (state = {}, action) => {
         case 'REMOVED':
             if (docIndex > -1) {
                 // console.log('rm\'d');
-                const updatedCollection = state[collection].splice(docIndex);
+                const withoutDoc = state[collection].splice(docIndex);
                 return {
                     ...state,
-                    [collection]: updatedCollection,
+                    [collection]: withoutDoc,
                 };
             }
             console.error(`Couldn't remove ${id}, not found in ${collection} collection`);
@@ -89,60 +81,41 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
         // restore collections to minimongo
         _.each(MeteorStore.getState(), (collection, key) => {
             const onlyWithIds = _.filter(collection, (doc) => doc._id);
+            // add the collection if it doesn't exist
             if (!getData().db[key]) {
                 // add collection to minimongo
                 getData().db.addCollection(key);
             }
-            // add documents to collection
-            getData().db[key].upsert(onlyWithIds);
+            // only upsert if the data doesn't match
+            if(getData().db[key] !== collection){
+                // add documents to collection
+                getData().db[key].upsert(onlyWithIds);
+            }
         });
     });
 
     Meteor.waitDdpConnected(() => {
+        // return false;
         // question: do I need to check for disconnection?
         let connected = true;
         Meteor.ddp.on('disconnected', () => {
             connected = false;
         });
         if (connected) {
-            Meteor.ddp.on('removed', (obj) => {
-                const {
-                    collection,
-                    id,
-                    fields
-                } = obj;
-                MeteorStore.dispatch({
-                    type: 'REMOVED',
-                    collection,
-                    id,
-                    fields
-                });
+            Meteor.ddp.on('removed', async (obj) => {
+                const {collection,id,fields} = obj;
+                await nextFrame();
+                MeteorStore.dispatch({type: 'REMOVED',collection,id,fields});
             });
-            Meteor.ddp.on('changed', (obj) => {
-                const {
-                    collection,
-                    id,
-                    fields
-                } = obj;
-                MeteorStore.dispatch({
-                    type: 'CHANGED',
-                    collection,
-                    id,
-                    fields
-                });
+            Meteor.ddp.on('changed', async (obj) => {
+                const {collection,id,fields} = obj;
+                await nextFrame();
+                MeteorStore.dispatch({type: 'CHANGED',collection,id,fields});
             });
-            Meteor.ddp.on('added', (obj) => {
-                const {
-                    collection,
-                    id,
-                    fields
-                } = obj;
-                MeteorStore.dispatch({
-                    type: 'ADDED',
-                    collection,
-                    id,
-                    fields
-                });
+            Meteor.ddp.on('added', async (obj) => {
+                const {collection,id,fields} = obj;
+                await nextFrame();
+                MeteorStore.dispatch({type: 'ADDED',collection,id,fields});
             });
         }
     });
@@ -157,7 +130,7 @@ class MeteorStore {
 }
 
 const subscribeCached = (store, name, ...args) => {
-    if (Meteor.ddp.status === 'disconnected') {
+    if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
             return {
                 ready: () => !!store.getState(),
                 offline: true,
