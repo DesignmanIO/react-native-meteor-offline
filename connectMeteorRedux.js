@@ -104,6 +104,7 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
         if (connected) {
             Meteor.ddp.on('removed', async (obj) => {
                 const {collection,id,fields} = obj;
+                // Next frame awaits the next animation frame before continuing
                 await nextFrame();
                 MeteorStore.dispatch({type: 'REMOVED',collection,id,fields});
             });
