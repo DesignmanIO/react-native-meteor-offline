@@ -12,9 +12,7 @@ import EventEmitter from 'events';
 import nextFrame from 'next-frame';
 
 const meteorReduxReducers = (state = {}, action) => {
-    // console.log(state, action, Meteor.ddp);
     const {type, collection, id, fields} = action;
-    const docIndex = state ? _.findIndex(state[collection], {_id: id}) : undefined;
     switch (type) {
         case 'ADDED':
             // collection doesn't exist yet, add it
@@ -22,29 +20,26 @@ const meteorReduxReducers = (state = {}, action) => {
                 return {
                     ...state,
                     [collection]: {
-                        [id]: {_id: id, ...fields},
+                        [id]: fields,
                     },
                 };
                 // no doc with _id exists yet
-            } else if (!_.find(state[collection], {_id: id})) {
+            } else if (!state[collection][id]) {
                 return {
                     ...state,
                     [collection]: {
                         ...state[collection],
-                        [id]: {_id: id, ...fields},
+                        [id]: fields,
                     },
                 };
-                // duplicate found, don't insert
-            } else if (_.find(state[collection], {_id: id})) {
+                // duplicate found, update it
+            } else {
                 // console.warn(`${id} not added to ${collection}, duplicate found`);
-                // console.log([...updatedCollection()]);
-                // const withUpdatedDoc = _.clone(state[collection]);
-                // withUpdatedDoc[docIndex] = {_id: id, ...fields};
                 return {
                     ...state,
                     [collection]: {
                       ...state[collection],
-                        [id]: _.merge(state[collection][id], fields),
+                        [id]: {...fields, ...state[collection][id]},
                     }
                 };
             }
@@ -58,8 +53,7 @@ const meteorReduxReducers = (state = {}, action) => {
                 }
             };
         case 'REMOVED':
-            if (docIndex > -1) {
-                // console.log('rm\'d');
+            if (state[collection][id]) {
                 return {
                   ...state,
                     [collection]: {
@@ -92,7 +86,6 @@ const meteorReduxEmitter = new EventEmitter();
 const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
     // console.log(preloadedState, enhancer);
     const MeteorStore = createStore(meteorReduxReducers, preloadedState, enhancer);
-
 
     MeteorStore.loaded = () => {
         meteorReduxEmitter.emit('rehydrated');
@@ -139,9 +132,9 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
             });
             Meteor.ddp.on('added', async (obj) => {
                 const {collection, id, fields} = obj;
+                fields._id = id;
                 const getCollection = MeteorStore.getState()[collection];
-                const doc = Object.assign({_id: id}, fields);
-                if(!_.isEqual(getCollection[id], doc));{
+                if(!_.isEqual(getCollection[id], fields));{
                     MeteorStore.dispatch({type: 'ADDED', collection, id, fields});
                 }
             });
