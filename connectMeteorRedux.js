@@ -163,7 +163,7 @@ const subscribeCached = (store, name, ...args) => {
             return Meteor.subscribe(name, ...args);
         }
     });
- if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
+   if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
     // if callback exists, run it
     if(typeof args[args.length - 1] === 'function' && store.getState().ready){
         const callback = _.once(args[args.length - 1]);
@@ -173,7 +173,8 @@ const subscribeCached = (store, name, ...args) => {
         ready: () => {return store.getState().ready || false},
         offline: true,
     };
-}
+  }
+};
 
 returnCached = (cursor, store, collectionName, doDisable) => {
     if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
