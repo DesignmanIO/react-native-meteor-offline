@@ -153,15 +153,20 @@ class MeteorStore {
 
 const subscribeCached = (store, name, ...args) => {
     if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
-        return {
-            ready: () => !!store.getState(),
-            offline: true,
-        };
+        // if callback exists, run it
+        if(typeof args[args.length - 1] === 'function'){
+            const callback = _.once(args[args.length - 1]);
+            callback();
+        }
         Meteor.waitDdpConnected(() => {
             if (Meteor.ddp.status === 'connected') {
                 return Meteor.subscribe(name, ...args);
             }
         });
+        return {
+            ready: () => {return store.getState().ready || false},
+            offline: true,
+        };
     }
     return Meteor.subscribe(name, ...args);
 }
