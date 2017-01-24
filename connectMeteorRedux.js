@@ -22,7 +22,7 @@ const meteorReduxReducers = (state = {}, action) => {
                 return {
                     ...state,
                     [collection]: {
-                        [id]: Object.assign(fields, {_id: id})
+                        [id]: {_id: id, ...fields},
                     },
                 };
                 // no doc with _id exists yet
@@ -31,20 +31,20 @@ const meteorReduxReducers = (state = {}, action) => {
                     ...state,
                     [collection]: {
                         ...state[collection],
-                        [id]: {...Object.assign(fields, {_id: id})},
+                        [id]: {_id: id, ...fields},
                     },
                 };
                 // duplicate found, don't insert
             } else if (_.find(state[collection], {_id: id})) {
                 // console.warn(`${id} not added to ${collection}, duplicate found`);
                 // console.log([...updatedCollection()]);
-                const withUpdatedDoc = _.clone(state[collection]);
-                withUpdatedDoc[docIndex] = Object.assign(fields, {_id: id});
+                // const withUpdatedDoc = _.clone(state[collection]);
+                // withUpdatedDoc[docIndex] = {_id: id, ...fields};
                 return {
                     ...state,
                     [collection]: {
                       ...state[collection],
-                        [id]: Object.assign({_id: id}, fields),
+                        [id]: _.merge(state[collection][id], fields),
                     }
                 };
             }
@@ -89,7 +89,7 @@ const meteorReduxReducers = (state = {}, action) => {
 
 const meteorReduxEmitter = new EventEmitter();
 
-const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
+const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
     // console.log(preloadedState, enhancer);
     const MeteorStore = createStore(meteorReduxReducers, preloadedState, enhancer);
 
