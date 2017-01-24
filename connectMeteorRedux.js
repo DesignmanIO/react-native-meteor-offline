@@ -70,6 +70,11 @@ const meteorReduxReducers = (state = {}, action) => {
             }
             // console.error(`Couldn't remove ${id}, not found in ${collection} collection`);
             return state;
+        case 'SET_READY':
+            return {
+              ...state,
+                ready: action.ready,
+            }
         case 'persist/REHYDRATE':
             if (typeof Meteor.ddp === undefined || Meteor.ddp.status === "disconnected") {
                 return action.payload;
@@ -111,6 +116,7 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = null) => {
                 getData().db[key].upsert(correctedCollection);
             }
         });
+        MeteorStore.dispatch({type: 'SET_READY', ready: true});
     });
 
     Meteor.waitDdpConnected(() => {
@@ -152,23 +158,21 @@ class MeteorStore {
 }
 
 const subscribeCached = (store, name, ...args) => {
-    if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
-        // if callback exists, run it
-        if(typeof args[args.length - 1] === 'function'){
-            const callback = _.once(args[args.length - 1]);
-            callback();
+    Meteor.waitDdpConnected(() => {
+        if (Meteor.ddp.status === 'connected') {
+            return Meteor.subscribe(name, ...args);
         }
-        Meteor.waitDdpConnected(() => {
-            if (Meteor.ddp.status === 'connected') {
-                return Meteor.subscribe(name, ...args);
-            }
-        });
-        return {
-            ready: () => {return store.getState().ready || false},
-            offline: true,
-        };
+    });
+ if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
+    // if callback exists, run it
+    if(typeof args[args.length - 1] === 'function' && store.getState().ready){
+        const callback = _.once(args[args.length - 1]);
+        callback();
     }
-    return Meteor.subscribe(name, ...args);
+    return {
+        ready: () => {return store.getState().ready || false},
+        offline: true,
+    };
 }
 
 returnCached = (cursor, store, collectionName, doDisable) => {
