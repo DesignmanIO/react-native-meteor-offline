@@ -156,6 +156,8 @@ const subscribeCached = (store, name, ...args) => {
             return Meteor.subscribe(name, ...args);
         }
     });
+    // fallback if store not initialized
+    if (!store) return Meteor.subscribe(name, ...args);
     // if callback exists, run it
     if(typeof args[args.length - 1] === 'function' && store.getState().ready){
         const callback = _.once(args[args.length - 1]);
