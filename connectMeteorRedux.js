@@ -33,7 +33,7 @@ const meteorReduxReducers = (state = {}, action) => {
                     },
                 };
                 // duplicate found, update it
-            } else {
+            } else if (state[collection] && state[collection][id]){
                 // console.warn(`${id} not added to ${collection}, duplicate found`);
                 return {
                     ...state,
