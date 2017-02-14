@@ -134,7 +134,7 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
                 const {collection, id, fields} = obj;
                 fields._id = id;
                 const getCollection = MeteorStore.getState()[collection];
-                if(!_.isEqual(getCollection[id], fields));{
+                if(!getCollection || !_.isEqual(getCollection[id], fields));{
                     MeteorStore.dispatch({type: 'ADDED', collection, id, fields});
                 }
             });
