@@ -70,7 +70,7 @@ const meteorReduxReducers = (state = {}, action) => {
                 ready: action.ready,
             }
         case 'persist/REHYDRATE':
-            if (typeof Meteor.ddp === undefined || Meteor.ddp.status === "disconnected") {
+            if (typeof Meteor.ddp === 'undefined' || Meteor.ddp.status === 'disconnected') {
                 return action.payload;
             }
         case 'HARDRESET':
@@ -134,7 +134,11 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
                 const {collection, id, fields} = obj;
                 fields._id = id;
                 const getCollection = MeteorStore.getState()[collection];
-                if(!getCollection || !_.isEqual(getCollection[id], fields));{
+                if(
+                  !getCollection ||
+                  !getCollection[id] ||
+                  !_.isEqual(getCollection[id], fields)
+                ){
                     MeteorStore.dispatch({type: 'ADDED', collection, id, fields});
                 }
             });
