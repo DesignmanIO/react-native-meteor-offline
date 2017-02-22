@@ -131,7 +131,8 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
                 MeteorStore.dispatch({type: 'CHANGED', collection, id, fields});
             });
             Meteor.ddp.on('added', async (obj) => {
-                const {collection, id, fields} = obj;
+                const {collection, id} = obj;
+                const fields = obj.fields || {};
                 fields._id = id;
                 const getCollection = MeteorStore.getState()[collection];
                 if(
