@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { Details } from '/lib/collections';
+import { Details } from '/collections/';
 
 export default () => {
   Meteor.publish('details-list', () => {
