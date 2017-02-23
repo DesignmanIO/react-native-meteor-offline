@@ -121,17 +121,20 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
         });
         if (connected) {
             Meteor.ddp.on('removed', async (obj) => {
-                const {collection, id, fields} = obj;
+                const {collection, id} = obj;
+                const fields = obj.fields || {};
                 await nextFrame();
                 MeteorStore.dispatch({type: 'REMOVED', collection, id, fields});
             });
             Meteor.ddp.on('changed', async (obj) => {
-                const {collection, id, fields} = obj;
+                const {collection, id} = obj;
+                const fields = obj.fields || {};
                 await nextFrame();
                 MeteorStore.dispatch({type: 'CHANGED', collection, id, fields});
             });
             Meteor.ddp.on('added', async (obj) => {
-                const {collection, id, fields} = obj;
+                const {collection, id} = obj;
+                const fields = obj.fields || {};
                 fields._id = id;
                 const getCollection = MeteorStore.getState()[collection];
                 if(
