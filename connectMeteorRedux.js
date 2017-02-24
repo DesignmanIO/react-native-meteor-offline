@@ -70,6 +70,7 @@ const meteorReduxReducers = (state = {}, action) => {
             if (typeof Meteor.ddp === 'undefined' || Meteor.ddp.status === 'disconnected') {
                 return action.payload;
             }
+            return state;
         case 'HARDRESET':
             console.log('hard reset');
             return {};
