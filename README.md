@@ -62,4 +62,11 @@ export createContainer((props) => {
     docs: Meteor.collection('docs').find({}),
   };
 }, component)
+
+````
+
+## Using Realm (experimental)
+Most stuff is the same, just substitute `initMeteorRedux` with `initMeteorRealm`
+````javascript
+const MeteorStore = initMeteorRealm({blacklist: 'CollectionIDontWantOffline'});
 ````

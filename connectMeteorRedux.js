@@ -10,6 +10,7 @@ import {
 import _ from 'lodash';
 import EventEmitter from 'events';
 import nextFrame from 'next-frame';
+import Realm from 'realm';
 
 const meteorReduxReducers = (state = {}, action) => {
     const {type, collection, id, fields} = action;
@@ -80,6 +81,125 @@ const meteorReduxReducers = (state = {}, action) => {
 };
 
 const meteorReduxEmitter = new EventEmitter();
+
+const initMeteorRealm = ({blackList}) => {
+  const MeteorStore = new Realm({
+    schema: [{
+      name: 'Collection',
+      primaryKey: 'name',
+      properties: {
+        name: 'string',
+        documents: {
+          type: 'list',
+          objectType: 'Document',
+        },
+      },
+    }, {
+      name: 'Document',
+      primaryKey: '_id',
+      properties: {
+        _id: 'string',
+        fields: 'string',
+      },
+    }],
+    schemaVersion: 2,
+    // migration(oldR, newR) {
+    //   if (oldR.schemaVersion !== 2 ) {
+    //     const oldO = oldR.objects('Document');
+    //     const newO = newR.objects('Document');
+    //     for (let i = 0; i < oldR.length; i++) {
+    //       newO[i].fields = oldO[i].value;
+    //     }
+    //   }
+    // },
+  });
+
+  MeteorStore.type = 'realm';
+  const t = new Date();
+  const getTime = (msg, timeSince) => {
+    const newTime = new Date();
+    const dif = newTime - timeSince;
+    if (dif > 1000) {
+      console.log(`${msg} in %c${dif}ms`, 'color: red;');
+    } else {
+      console.log(`${msg} in ${newTime - timeSince}ms`);
+    }
+    return newTime;
+  };
+  const getRealmData = () => {
+    const data = {};
+    const beforeC = new Date();
+    // const cloneRecord = (id, val) => {
+    //   return {_id: id, ...JSON.parse(val)};
+    // };
+    MeteorStore.objects('Collection').forEach((collection) => {
+      const beforeD = getTime(`--- Time to get collection ${collection.name}`, beforeC);
+      const documents = collection.documents;
+      getTime(`got ${documents.length} docs`, beforeD);
+      // const docClone = _.cloneDeep(documents);
+      documents.removeAllListeners();
+      getTime('removed listeners', beforeD);
+      // documents.forEach((doc) => {const a = "b"});
+      // console.log();
+      documents.map((doc) => {
+        return doc;
+      });
+      getTime(`cloned ${documents.length} docs`, beforeD);
+      // getTime('Time to fetch docs', beforeD);
+      data[collection.name] = documents;
+    });
+    getTime('fully fetched', t);
+    console.log(data);
+    return data;
+  };
+  restoreData(getRealmData());
+
+  Meteor.waitDdpConnected(() => {
+    Meteor.ddp.on('added', async ({collection, id, fields}) => {
+      await nextFrame();
+      if (blackList.indexOf(collection) < 0) {
+        let realmCollection = MeteorStore.objectForPrimaryKey('Collection', collection);
+        const jsonFields = JSON.stringify(fields);
+        MeteorStore.write(() => {
+          if (!realmCollection) {
+            realmCollection = MeteorStore.create('Collection', {name: collection});
+          }
+          const doc = MeteorStore.objectForPrimaryKey('Document', id);
+          const docInCollection = realmCollection.documents.filtered('_id = $0', id)[0];
+          if (!doc) {
+            realmCollection.documents.push({_id: id, fields: jsonFields});
+          } else if (!docInCollection) {
+            realmCollection.documents.push(doc);
+          } else if (jsonFields !== doc.fields) {
+            doc.fields = jsonFields;
+          }
+        });
+      }
+    });
+    Meteor.ddp.on('changed', ({collection, id, fields}) => {
+      if (blackList.indexOf(collection) < 0) {
+        MeteorStore.write(() => {
+          const realmCollection = MeteorStore.objectForPrimaryKey('Collection', collection);
+          const doc = realmCollection.documents.filtered('_id = $0', id)[0];
+          const jsonFields = JSON.stringify(fields);
+          if (jsonFields !== doc.fields) {
+            doc.fields = JSON.stringify(fields);
+          }
+        });
+      }
+    });
+    Meteor.ddp.on('removed', ({collection, id}) => {
+      const realmCollection = MeteorStore.objectForPrimaryKey('Collection', collection);
+      const doc = realmCollection.documents.filtered('_id = $0', id)[0];
+      MeteorStore.write(() => {
+        MeteorStore.delete(doc);
+      });
+    });
+  })
+  ;
+
+  return MeteorStore;
+};
 
 const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
     // console.log(preloadedState, enhancer);
@@ -168,11 +288,18 @@ const subscribeCached = (store, name, ...args) => {
         const callback = _.once(args[args.length - 1]);
         callback();
     }
-    return {
-        ready: () => {return store.getState().ready || false},
-        offline: true,
-    };
-};
+    if (store.type === 'redux') {
+      if (store.getState().ready) {
+        callback(null, ready(true));
+      }
+      return ready(store.getState().ready);
+    } else if (store.type === 'realm') {
+      callback(null, ready(true));
+      return ready(true);
+    }
+    // One of the above values should have returned...
+    console.warn('Something went wrong', store);
+    return false;
 
 returnCached = (cursor, store, collectionName, doDisable) => {
     if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
@@ -184,7 +311,8 @@ returnCached = (cursor, store, collectionName, doDisable) => {
 export {
   meteorReduxReducers,
   subscribeCached,
-  returnCached
+  returnCached,
+  initMeteorRealm,
 };
 export default initMeteorRedux;
 // export default connectMeteorRedux;
