@@ -209,6 +209,8 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
         meteorReduxEmitter.emit('rehydrated');
     };
 
+    MeteorStore.type = 'redux';
+
     meteorReduxEmitter.once('rehydrated', () => {
         // restore collections to minimongo
         _.each(MeteorStore.getState(), (collection, key) => {
