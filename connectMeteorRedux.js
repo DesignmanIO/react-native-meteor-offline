@@ -56,8 +56,7 @@ const meteorReduxReducers = (state = {}, action) => {
         case 'REMOVED':
             if (state[collection][id]) {
               const withoutDoc = {...state};
-              delete withoutDoc.collection.id;
-              return withoutDoc;
+              delete withoutDoc[collection][id];
               return withoutDoc;
             }
             // console.error(`Couldn't remove ${id}, not found in ${collection} collection`);
