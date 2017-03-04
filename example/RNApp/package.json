@@ -9,16 +9,21 @@
   },
   "dependencies": {
     "@exponent/react-native-navigator": "^0.4.7",
+    "babel-plugin-transform-remove-console": "^6.8.1",
+    "babel-preset-react-native-stage-0": "^1.0.1",
+    "babel-runtime": "^6.23.0",
     "gravatar-api": "^1.4.0",
-    "react": "~15.3.1",
-    "react-native": "^0.35.0",
+    "react": "~15.4.1",
+    "react-native": "^0.42.0",
     "react-native-keyboard-spacer": "^0.3.0",
     "react-native-meteor": "^1.0.0-rc14",
-    "react-native-tab-navigator": "^0.3.3",
-    "react-native-meteor-redux": "^1.1.11"
+    "react-native-meteor-redux": "DesignmanIO/react-native-meteor-redux.git#realm",
+    "react-native-tab-navigator": "^0.3.3"
   },
   "devDependencies": {
+    "babel-cli": "^6.23.0",
     "babel-eslint": "^7.0.0",
+    "babel-preset-es2015": "^6.22.0",
     "eslint": "^3.3.1",
     "eslint-config-airbnb": "^12.0.0",
     "eslint-plugin-import": "^1.16.0",

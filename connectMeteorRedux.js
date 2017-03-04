@@ -1,12 +1,8 @@
 /**
  * Created by Julian on 12/30/16.
  */
-import Meteor, {
-  getData
-} from 'react-native-meteor';
-import {
-  createStore
-} from 'redux';
+import Meteor, {getData} from 'react-native-meteor';
+import {createStore} from 'redux';
 import _ from 'lodash';
 import EventEmitter from 'events';
 import nextFrame from 'next-frame';

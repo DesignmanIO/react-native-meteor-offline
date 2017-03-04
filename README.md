@@ -67,6 +67,15 @@ export createContainer((props) => {
 
 ## Using Realm (experimental)
 Most stuff is the same, just substitute `initMeteorRedux` with `initMeteorRealm`
+Before running, run `react-native link realm`
 ````javascript
 const MeteorStore = initMeteorRealm({blacklist: 'CollectionIDontWantOffline'});
 ````
+
+### Build issues with example
+If you run into build issues with the example, open it with Xcode to find out what the specific problems are. There was a breaking change in RN 0.40.0 which changed some naming conventions, so this is a common issue. Steps to fix:
+1. Run clean (cmd + shift + K)
+2. Run build (cmd + B)
+3. If you find things like `"RCTBridgeModule.h" file not found`, do a search and replace (cmd + opt + shift + F), replacing `"RCTBridgeModule.h"` with `<React/RCTBridgeModule.h>`. There are a few other modules like this, generally that start with `RCT`.
+4. Still have problems? Try running `react-native upgrade` (warning: this may overwrite to native settings in Xcode or Android Studio)
+5. Run `react-native link realm` again
