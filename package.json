@@ -1,7 +1,7 @@
 {
   "name": "react-native-meteor-redux",
-  "version": "1.1.18",
-  "description": "Link react-native-meteor to redux",
+  "version": "1.1.19",
+  "description": "Link react-native-meteor to redux or realm",
   "main": "connectMeteorRedux.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
