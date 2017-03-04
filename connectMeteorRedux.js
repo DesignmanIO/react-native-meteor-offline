@@ -168,8 +168,11 @@ const initMeteorRealm = ({blackList}) => {
     getTime('fully fetched', t);
     console.log(data);
     return data;
-  };
-  restoreData(getRealmData());
+  }
+
+  if (MeteorStore.objects('Collection').length){
+    restoreData(getRealmData());
+  }
 
   Meteor.waitDdpConnected(() => {
     Meteor.ddp.on('added', async ({collection, id, fields}) => {

@@ -2,9 +2,7 @@ import React from 'react';
 import Meteor, { createContainer } from 'react-native-meteor';
 
 // react-native-meteor-redux
-import initMeteorRedux from 'react-native-meteor-redux';
-import { AsyncStorage } from 'react-native';
-import { persistStore, autoRehydrate } from 'redux-persist';
+import { initMeteorRealm } from 'react-native-meteor-redux';
 // end react-native-meteor-redux
 
 import LoggedOut from './layouts/LoggedOut';
@@ -15,12 +13,8 @@ import settings from './config/settings';
 Meteor.connect(settings.METEOR_URL);
 
 // react-native-meteor-redux
-const MeteorStore = initMeteorRedux(undefined, autoRehydrate());
-persistStore(MeteorStore, { storage: AsyncStorage }, () => {
-  MeteorStore.loaded();
-});
-setTimeout(() => console.log(MeteorStore.getState()), 10000);
-export { MeteorStore }
+const MeteorStore = initMeteorRealm({ blackList: [] });
+export { MeteorStore };
 // end react-native-meteor-redux
 
 const RNApp = (props) => {
