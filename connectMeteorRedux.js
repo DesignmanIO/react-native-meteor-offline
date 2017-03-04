@@ -203,7 +203,7 @@ const initMeteorRealm = ({blackList}) => {
           const doc = realmCollection.documents.filtered('_id = $0', id)[0];
           const jsonFields = JSON.stringify(fields);
           if (jsonFields !== doc.fields) {
-            doc.fields = JSON.stringify(fields);
+            doc.fields = jsonFields;
           }
         });
       }
