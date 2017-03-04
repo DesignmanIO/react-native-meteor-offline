@@ -298,31 +298,40 @@ class MeteorStore {
 }
 
 const subscribeCached = (store, name, ...args) => {
-    Meteor.waitDdpConnected(() => {
-        if (Meteor.ddp.status === 'connected') {
-            return Meteor.subscribe(name, ...args);
-        }
-    });
-    // fallback if store not initialized
-    if (!store) return Meteor.subscribe(name, ...args);
-    // if callback exists, run it
-    if(typeof args[args.length - 1] === 'function' && store.getState().ready){
-        const callback = _.once(args[args.length - 1]);
-        callback();
+  const lastArg = args[args.length - 1];
+  const callback = typeof lastArg === 'function' ? _.once(lastArg) : () => false;
+  const ready = (bool) => {
+    return {ready: () => bool, offline: true};
+  };
+
+  /* eslint-disable consistent-return */
+  Meteor.waitDdpConnected(() => {
+    if (Meteor.ddp.status === 'connected') {
+      console.log('connected sub');
+      return Meteor.subscribe(name, ...args);
     }
-    if (store.type === 'redux') {
-      if (store.getState().ready) {
-        callback(null, ready(true));
-      }
-      return ready(store.getState().ready);
-    } else if (store.type === 'realm') {
+  });
+  /* eslint-enable consistent-return */
+
+  // fallback if store not initialized
+  if (!store) {
+    // console.warn('Store not being passed to initMeteor');
+    return Meteor.subscribe(name, ...args);
+  }
+
+  if (store.type === 'redux') {
+    if (store.getState().ready) {
       callback(null, ready(true));
-      return ready(true);
     }
-    // One of the above values should have returned...
-    console.warn('Something went wrong', store);
-    return false;
-}
+    return ready(store.getState().ready);
+  } else if (store.type === 'realm') {
+    callback(null, ready(true));
+    return ready(true);
+  }
+  // One of the above values should have returned...
+  console.warn('Something went wrong', store);
+  return false;
+};
 
 const returnCached = (cursor, store, collectionName, doDisable) => {
     if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
