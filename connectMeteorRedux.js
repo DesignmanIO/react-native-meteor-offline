@@ -324,7 +324,7 @@ const subscribeCached = (store, name, ...args) => {
     return false;
 }
 
-returnCached = (cursor, store, collectionName, doDisable) => {
+const returnCached = (cursor, store, collectionName, doDisable) => {
     if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
         return store.getState()[collectionName] || [];
     }
