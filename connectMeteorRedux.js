@@ -77,6 +77,28 @@ const meteorReduxReducers = (state = {}, action) => {
 
 const meteorReduxEmitter = new EventEmitter();
 
+const restoreData = (source) => {
+  _.each(source, async (collection, key) => {
+    await nextFrame();
+    if (collection) {
+      const correctedCollection = _.chain(collection)
+        .map((doc) => doc)
+        .filter('_id')
+        .value();
+      // add the collection if it doesn't exist
+      if (!getData().db[key]) {
+        // add collection to minimongo
+        getData().db.addCollection(key);
+      }
+      // only upsert if the data doesn't match
+      if (!_.isEqual(getData().db[key], collection)) {
+        // add documents to collection
+        getData().db[key].upsert(correctedCollection);
+      }
+    }
+  });
+};
+
 const initMeteorRealm = ({blackList}) => {
   const MeteorStore = new Realm({
     schema: [{
