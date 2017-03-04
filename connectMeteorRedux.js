@@ -297,6 +297,7 @@ const subscribeCached = (store, name, ...args) => {
     // One of the above values should have returned...
     console.warn('Something went wrong', store);
     return false;
+}
 
 returnCached = (cursor, store, collectionName, doDisable) => {
     if (Meteor.ddp && Meteor.ddp.status === 'disconnected') {
