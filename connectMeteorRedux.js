@@ -80,9 +80,10 @@ const meteorReduxReducers = (state = {}, action) => {
 
 const meteorReduxEmitter = new EventEmitter();
 
-const initMeteorRedux = (preloadedState = undefined, enhancer = undefined) => {
+const initMeteorRedux = (preloadedState = undefined, enhancer = undefined, customReducers = undefined) => {
     // console.log(preloadedState, enhancer);
-    const MeteorStore = createStore(meteorReduxReducers, preloadedState, enhancer);
+    const newReducers = (customReducers !== undefined)?combineReducers({customReducers,meteorReduxReducers}):meteorReduxReducers;
+    const MeteorStore = createStore(newReducers, preloadedState, enhancer);
 
     MeteorStore.loaded = () => {
         meteorReduxEmitter.emit('rehydrated');
