@@ -182,10 +182,6 @@ returnCached = (cursor, store, collectionName, doDisable) => {
     return cursor;
 }
 
-// const testOutput = () => {
-//   console.log('Hello rn-m-redux');
-// }
-
 export {
   meteorReduxReducers,
   subscribeCached,
