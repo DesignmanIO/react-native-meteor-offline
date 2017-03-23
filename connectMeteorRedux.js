@@ -5,7 +5,8 @@ import Meteor, {
   getData
 } from 'react-native-meteor';
 import {
-  createStore
+  createStore,
+  combineReducers
 } from 'redux';
 import _ from 'lodash';
 import EventEmitter from 'events';
@@ -81,8 +82,8 @@ const meteorReduxReducers = (state = {}, action) => {
 const meteorReduxEmitter = new EventEmitter();
 
 const initMeteorRedux = (preloadedState = undefined, enhancer = undefined, customReducers = undefined) => {
-    // console.log(preloadedState, enhancer);
-    const newReducers = (customReducers !== undefined)?combineReducers({customReducers,meteorReduxReducers}):meteorReduxReducers;
+    // console.log(preloadedState, enhancer)
+    const newReducers = (customReducers !== undefined) ? combineReducers({ ...customReducers, meteorReduxReducers }) : meteorReduxReducers;
     const MeteorStore = createStore(newReducers, preloadedState, enhancer);
 
     MeteorStore.loaded = () => {
@@ -180,6 +181,10 @@ returnCached = (cursor, store, collectionName, doDisable) => {
     }
     return cursor;
 }
+
+// const testOutput = () => {
+//   console.log('Hello rn-m-redux');
+// }
 
 export {
   meteorReduxReducers,
