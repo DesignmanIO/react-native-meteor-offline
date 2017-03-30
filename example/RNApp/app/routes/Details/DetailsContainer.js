@@ -20,7 +20,9 @@ DetailsContainer.propTypes = {
 
 export default createContainer(() => {
   // react-native-meteor-redux
-  const handle = subscribeCached(MeteorStore, 'details-list');
+  const handle = subscribeCached(MeteorStore, 'details-list', 'tester', {test: 'test'}, (err, res) => {
+    console.log(err, res);
+  });
   // end react-native-meteor-redux
   return {
     detailsReady: handle.ready(),

@@ -131,7 +131,11 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined, custo
                 await nextFrame();
                 MeteorStore.dispatch({type: 'CHANGED', collection, id, fields});
             });
-            Meteor.ddp.on('added', async (obj) => {
+            Meteor.ddp.on('added', async (obj, ...args) => {
+                console.log(this, args);
+                console.log(getData);
+                console.log(getData());
+                console.log(getData().subscriptions);
                 const {collection, id} = obj;
                 const fields = obj.fields || {};
                 fields._id = id;
@@ -163,6 +167,7 @@ const subscribeCached = (store, name, ...args) => {
         }
     });
     console.log(store, name, args);
+    // let key = 
     // fallback if store not initialized
     if (!store) return Meteor.subscribe(name, ...args);
     // if callback exists, run it
