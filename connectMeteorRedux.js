@@ -118,6 +118,9 @@ const initMeteorRedux = (preloadedState = undefined, enhancer = undefined, custo
         Meteor.ddp.on('disconnected', () => {
             connected = false;
         });
+        Meteor.ddp.on('connected', () => {
+            connected = true;
+        });
         if (connected) {
             Meteor.ddp.on('removed', async (obj) => {
                 const {collection, id} = obj;
