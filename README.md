@@ -63,3 +63,17 @@ export createContainer((props) => {
   };
 }, component)
 ````
+
+### Running the example
+Execute the following commands:
+````bash
+cd example/RNApp && npm i
+cd ../MeteorApp && meteor
+cd ../RNApp && react-native run-ios
+# or
+cd ../RNApp && react-native run-android
+````
+If you get .babelrc errors, try running this in the RNApp directory
+````bash
+./node_modules/react-native/packager/packager.sh start --reset-cache
+````
