@@ -162,7 +162,7 @@ const subscribeCached = (store, name, ...args) => {
             return Meteor.subscribe(name, ...args);
         }
     });
-    console.log(arguments, JSON.stringify(arguments));
+    console.log(arguments);
     // fallback if store not initialized
     if (!store) return Meteor.subscribe(name, ...args);
     // if callback exists, run it
