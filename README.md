@@ -1,46 +1,30 @@
-# react-native-meteor-redux
-Links react-native-meteor to redux
+# react-native-meteor-offline
+
+This package uses redux and redux-persist behind the scenes to maintain offline versions of your meteor data (compatible with react-native-meteor).
+
+Important: V 2.0 implements a new class-based API. The V 1 api will be deprecated at some point. I've also renamed this react-native-meteor-offline, since that's more reflective of what it is.
+Access the 1.X API here: https://github.com/DesignmanIO/react-native-meteor-redux/tree/1.1.1
 
 ## Install
 `npm install react-native-meteor-redux`
 
 ## Use
-At it's basic level, `react-native-meteor-redux` will add any documents from minimongo to redux.
+### Initialize
 ````javascript
-import initMeteorRedux from 'react-native-meteor-redux';
+import MeteorOffline from 'react-native-meteor-redux';
 
-const MeteorStore = initMeteorRedux(initialState, enhancers);
+// initialize a MeteorOffline instance with options, currently just takes debounce
+// Do this at/near the top level of your app
+const GroundedMeteor = new MeteorOffline({debounce: 1000});
 
 // Now you can access MeteorStore as a redux store throughout your app.
-export {MeteorStore};
-````
-
-## With Redux Persist
-The real purpose of this package is to allow persisting through `redux-persist`
-### Initializing
-````javascript
-// myReduxStuff.js
-import initMeteorRedux from 'react-native-meteor-redux';
-import {AsyncStorage} from 'react-native';
-import {persistStore, autoRehydrate} from 'redux-persist';
-
-const MeteorStore = initMeteorRedux(undefined, autoRehydrate());
-
-// Pick your storage option, I used AsyncStorage which makes sense for react-native
-persistStore(MeteorStore, {storage: AsyncStorage}, () => {
-  // Callback tells minimongo to use MeteorStore until connectivity is restored
-  MeteorStore.loaded()
-});
-
-export {MeteorStore}
+export {GroundedMeteor};
 ````
 
 ### Using cached collection
-You should be able to find documents as normal. I'm not sure what will happen if you do updates/inserts/removes when offline, let me know what happens :)
 
 ````javascript
-import {subscribeCached} from 'react-native-meteor-redux';
-import {MeteorStore} from '../myReduxStuff';
+import {GroundedMeteor} from '../index';
 import Meteor, {createContainer} from 'react-native-meteor';
 
 const component = (props) => {
@@ -57,9 +41,15 @@ const component = (props) => {
 }
 
 export createContainer((props) => {
-  const sub = subscribeCached(MeteorStore, 'example', {user: 'Mikey'});
+  // MeteorOffline.subscribe takes an extra first parameter, uniqueSubscriptionName
+  // The unique name allows you to have multiple subscriptions to the same publication
+  // Collections are synchronized based on the uniqueSubscriptionName
+  const sub = GroundedMeteor.subscribe('getUsersById', 'users/id', {userIds: [...]}, () => {
+    console.log('callback');
+  });
+  // MeteorOffline.collection works as normal, but behind the scenes synchronizes your collection
   return {
-    docs: Meteor.collection('docs').find({}),
+    docs: GroundedMeteor.collection('docs').find({}),
   };
 }, component)
 ````
