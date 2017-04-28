@@ -47,9 +47,9 @@ export createContainer((props) => {
   const sub = GroundedMeteor.subscribe('getUsersById', 'users/id', {userIds: [...]}, () => {
     console.log('callback');
   });
-  // MeteorOffline.collection works as normal, but behind the scenes synchronizes your collection
+  // MeteorOffline.collection works as normal, but we pass the unique subscription name so that behind the scenes it will synchronize your collection
   return {
-    docs: GroundedMeteor.collection('docs').find({}),
+    docs: GroundedMeteor.collection('docs', 'getUsersById').find({}),
   };
 }, component)
 ````
