@@ -187,13 +187,12 @@ const subscribeCached = (store, name, ...args) => {
 class MeteorOffline {
   constructor(options = {
     debounce: 1000,
+    store: initMeteorRedux(undefined, autoRehydrate()),
   }) {
     this.offline = true;
     this.subscriptions = [];
     this.collections = [];
-    if (!options.store) {
-      this.store = initMeteorRedux(undefined, autoRehydrate());
-    }
+    this.store = options.store;
     this.persister = persistStore(
       this.store,
       { storage: AsyncStorage, debounce: options.debounce },
