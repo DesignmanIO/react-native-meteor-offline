@@ -14,6 +14,11 @@ const meteorReduxReducers = (
 ) => {
   const { type, collection, id, fields } = action;
   switch (type) {
+    case 'SET_USRID': {
+      const newState = _.clone(state);
+      newState.userId = id;
+      return newState;
+    }
     case 'RECENTLY_ADDED': {
       const newState = _.clone(state);
       _.set(
@@ -230,6 +235,14 @@ class MeteorOffline {
         this.firstConnection = false;
       }
     });
+  }
+  user() {
+    if (Meteor.user()) {
+      this.store.dispatch({ type: 'SET_USERID', id: Meteor.userId() });
+      return Meteor.user();
+    }
+    const { userId } = this.store.getState();
+    return Meteor.collection('users').findOne(userId);
   }
   subscribe(uniqueName, name, ...params) {
     const hasCallback = typeof params[params.length - 1] === 'function';

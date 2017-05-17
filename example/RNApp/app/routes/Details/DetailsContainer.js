@@ -24,7 +24,7 @@ export default createContainer(() => {
   // const handle = subscribeCached(MeteorStore, 'details-list');
   const handle = MO.subscribe('detailsByParam', 'details-list', 'param', {test: 'test'}, () => console.log('callback'));
   const details = MO.collection('details', 'detailsByParam').find();
-  console.log(details.length);
+  console.log(details.length, Meteor.user(), MO.user());
   // console.log(MO.store.getState());
   // end react-native-meteor-redux
   return {
