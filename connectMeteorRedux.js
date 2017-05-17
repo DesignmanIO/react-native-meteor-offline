@@ -69,10 +69,14 @@ const meteorReduxReducers = (
       // todo: check for removed docs
       const { removed } = action;
       const newState = _.clone(state);
-      newState.reactNativeMeteorOfflineRecentlyAdded[collection] = [];
+      // newState.reactNativeMeteorOfflineRecentlyAdded[collection] = [];
       newState[collection] = _.omit(newState[collection], removed);
       console.log('collection now contains ', _.size(newState[collection]));
       getData().db[collection].remove({ _id: { $in: removed } });
+      return newState;
+    case 'CLEAR_OFFLINE_RECENTLY_ADDED':
+      const newState = _.clone(state);
+      newState.reactNativeMeteorOfflineRecentlyAdded[collection] = [];
       return newState;
     case 'persist/REHYDRATE':
       if (
@@ -283,6 +287,11 @@ class MeteorOffline {
       //   console.log('a doc was deleted');
       //   this.store.dispatch({ type: 'REMOVED', collection, id });
       // });
+    }
+    if (
+      Meteor.ddp.status === 'disconnected'
+    ) {
+      this.store.dispatch({ type: 'CLEAR_OFFLINE_RECENTLY_ADDED', collection });
     }
     this.collections = _.uniq([...this.collections, collection]);
     return Meteor.collection(collection);
