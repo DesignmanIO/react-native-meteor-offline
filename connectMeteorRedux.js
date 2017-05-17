@@ -227,6 +227,7 @@ class MeteorOffline {
         this.offline = false;
       } else {
         this.offline = true;
+        this.firstConnection = false;
       }
     });
   }
