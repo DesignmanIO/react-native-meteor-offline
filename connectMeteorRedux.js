@@ -14,12 +14,21 @@ const meteorReduxReducers = (
 ) => {
   const { type, collection, id, fields } = action;
   switch (type) {
+    case 'SET_USRID': {
+      const newState = _.clone(state);
+      newState.userId = id;
+      return newState;
+    }
     case 'RECENTLY_ADDED': {
       const newState = _.clone(state);
       _.set(
         newState,
         `reactNativeMeteorOfflineRecentlyAdded.${collection}`,
-        _.get(newState, `reactNativeMeteorOfflineRecentlyAdded.${collection}`, []),
+        _.get(
+          newState,
+          `reactNativeMeteorOfflineRecentlyAdded.${collection}`,
+          []
+        )
       );
       newState.reactNativeMeteorOfflineRecentlyAdded[collection].push(id);
       return newState;
@@ -69,7 +78,7 @@ const meteorReduxReducers = (
       // todo: check for removed docs
       const { removed } = action;
       const newState = _.clone(state);
-      newState.reactNativeMeteorOfflineRecentlyAdded[collection] = [];
+      _.set(newState, `reactNativeMeteorOfflineRecentlyAdded.${collection}`, []);
       newState[collection] = _.omit(newState[collection], removed);
       console.log('collection now contains ', _.size(newState[collection]));
       getData().db[collection].remove({ _id: { $in: removed } });
@@ -147,10 +156,6 @@ const initMeteorRedux = (
         MeteorStore.dispatch({ type: 'CHANGED', collection, id, fields });
       });
       Meteor.ddp.on('added', (obj, ...args) => {
-        // console.log(this._subscriptionHandle);
-        // console.log(getData);
-        // console.log(getData());
-        // console.log(getData().subscriptions);
         const { collection, id } = obj;
         const fields = obj.fields || {};
         fields._id = id;
@@ -160,9 +165,10 @@ const initMeteorRedux = (
           !getCollection[id] ||
           !_.isEqual(getCollection[id], fields)
         ) {
+          // don't insert if it exists
           MeteorStore.dispatch({ type: 'ADDED', collection, id, fields });
-          MeteorStore.dispatch({ type: 'RECENTLY_ADDED', collection, id });
         }
+        MeteorStore.dispatch({ type: 'RECENTLY_ADDED', collection, id });
       });
     }
   });
@@ -200,17 +206,22 @@ const returnCached = (cursor, store, collection, doDisable) => {
 };
 
 class MeteorOffline {
-  constructor(options = {
-    debounce: 1000,
-    store: initMeteorRedux(undefined, autoRehydrate()),
-  }) {
+  constructor(options = {}) {
     this.offline = true;
+    // first time connecting since app open or connection restored
+    this.firstConnection = true;
     this.subscriptions = [];
     this.collections = [];
-    this.store = options.store;
+    if (!options.store) {
+      this.store = initMeteorRedux(undefined, autoRehydrate());
+    }
     this.persister = persistStore(
       this.store,
-      { storage: AsyncStorage, debounce: options.debounce || 1000 },
+      {
+        storage: AsyncStorage,
+        debounce: options.debounce || 1000,
+        blacklist: ['reactNativeMeteorOfflineRecentlyAdded'],
+      },
       () => {
         this.store.loaded();
       }
@@ -221,27 +232,35 @@ class MeteorOffline {
         this.offline = false;
       } else {
         this.offline = true;
+        this.firstConnection = false;
       }
     });
+  }
+  user() {
+    if (Meteor.user()) {
+      this.store.dispatch({ type: 'SET_USERID', id: Meteor.userId() });
+      return Meteor.user();
+    }
+    const { userId } = this.store.getState();
+    return Meteor.collection('users').findOne(userId);
   }
   subscribe(uniqueName, name, ...params) {
     const hasCallback = typeof params[params.length - 1] === 'function';
     const justParams = params.slice(0, params.length - 1);
-    this.subscriptions[uniqueName] = {
-      name,
-      params: JSON.stringify(justParams),
-      ready: false,
-    };
+    _.set(this.subscriptions, `${uniqueName}.${name}`, name);
+    _.set(this.subscriptions, `${uniqueName}.${params}`, JSON.stringify(justParams));
     let subHandle = Meteor.subscribe(name, ...params);
     if (this.offline) {
       subHandle = {
         ready: () => {
+          // ready === rehydrated
           return this.store.getState().ready || false;
         },
         offline: this.offline,
       };
     }
-    if (this.offline && hasCallback && this.store.getState().ready) {
+    // run callback if it's offline and ready for the first time
+    if (this.offline && hasCallback && this.store.getState().ready && !this.subscriptions[uniqueName].ready) {
       // handled by meteor.subscribe if online
       const callback = _.once(params[params.length - 1]);
       callback();
@@ -250,39 +269,31 @@ class MeteorOffline {
     return subHandle;
   }
   collection(collection, subscriptionName) {
-    // console.log(_.get(this.subscriptions, `${subscriptionName}.ready`), `${subscriptionName}.ready`);
     if (
-      Meteor.status().connected &&
+      Meteor.status().connected &&  
+      this.firstConnection &&
       _.get(this.subscriptions, `${subscriptionName}.ready`)
     ) {
-    // TODO: the above test is too eager and calls before all documents are collected
-      const t = new Date();
-      // const cached = _.filter(this.store.getState()[collection], (key, doc) => {
-      //   // console.log(doc.reactNativeMeteorOfflineIsNew);
-      //   return doc.reactNativeMeteorOfflineIsNew;
-      // });
+      this.firstConnection = false;
+      // const t = new Date();
       const added = _.sortBy(
-        this.store.getState().reactNativeMeteorOfflineRecentlyAdded[collection]
+        _.get(this.store.getState(), `reactNativeMeteorOfflineRecentlyAdded.${collection}`)
       );
       const cached = _.sortBy(_.keys(this.store.getState()[collection]));
-      console.log(`got cached in ${new Date() - t}ms`);
-      const removed = _.sortBy(_.difference(cached, added));
-      console.log(
-        `got difference in ${new Date() - t}ms`,
-        added,
-        cached,
-        removed,
-        this.store.getState().reactNativeMeteorOfflineRecentlyAdded
-      );
+      // console.log(`got cached in ${new Date() - t}ms`);
+      const removed = _.sortBy(_.difference(cached, added)) || [];
+      // console.log(
+      //   `got difference in ${new Date() - t}ms`,
+      //   added,
+      //   cached,
+      //   removed,
+      //   this.store.getState().reactNativeMeteorOfflineRecentlyAdded
+      // );
       this.store.dispatch({
         type: 'REMOVE_AFTER_RECONNECT',
         collection,
         removed,
       });
-      // removed.forEach((id) => {
-      //   console.log('a doc was deleted');
-      //   this.store.dispatch({ type: 'REMOVED', collection, id });
-      // });
     }
     this.collections = _.uniq([...this.collections, collection]);
     return Meteor.collection(collection);
@@ -291,4 +302,3 @@ class MeteorOffline {
 
 export { meteorReduxReducers, subscribeCached, returnCached, MeteorOffline };
 export default initMeteorRedux;
-// export default connectMeteorRedux;

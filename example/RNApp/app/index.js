@@ -27,13 +27,13 @@ export const MO = new MeteorOffline();
 const RNApp = (props) => {
   const { status, user, loggingIn } = props;
 
-  return <LoggedIn />;
-  if (!user) {
+  console.log(loggingIn, status);
+  // return <LoggedIn />;
+  if (loggingIn && status.connected) {
     return <Loading />;
-  } else
-    if (user !== null) {
-      return <LoggedIn />;
-    }
+  } else if (user !== null) {
+    return <LoggedIn />;
+  }
   return <LoggedOut />;
 };
 
@@ -46,7 +46,7 @@ RNApp.propTypes = {
 export default createContainer(() => {
   return {
     status: Meteor.status(),
-    user: Meteor.user(),
+    user: MO.user(),
     loggingIn: Meteor.loggingIn(),
   };
 }, RNApp);
