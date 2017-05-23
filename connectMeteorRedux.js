@@ -15,56 +15,51 @@ const meteorReduxReducers = (
   const { type, collection, id, fields } = action;
   switch (type) {
     case 'SET_USRID': {
-      const newState = _.clone(state);
-      newState.userId = id;
-      return newState;
+      return { ...state, userId: id };
     }
     case 'RECENTLY_ADDED': {
-      const newState = _.clone(state);
-      _.set(
-        newState,
-        `reactNativeMeteorOfflineRecentlyAdded.${collection}`,
+      let tmpReactNativeMeteorOfflineRecentlyAdded = state.reactNativeMeteorOfflineRecentlyAdded ? _.cloneDeep(state.reactNativeMeteorOfflineRecentlyAdded) : {};
+      _.set(tmpReactNativeMeteorOfflineRecentlyAdded,
+        `${collection}`,
         _.get(
-          newState,
-          `reactNativeMeteorOfflineRecentlyAdded.${collection}`,
+          tmpReactNativeMeteorOfflineRecentlyAdded,
+          `${collection}`,
           []
         )
       );
-      newState.reactNativeMeteorOfflineRecentlyAdded[collection].push(id);
-      return newState;
+      tmpReactNativeMeteorOfflineRecentlyAdded[collection].push(id);
+      return { ...state, reactNativeMeteorOfflineRecentlyAdded: tmpReactNativeMeteorOfflineRecentlyAdded };
     }
     case 'ADDED': {
       let newState;
       if (!state[collection]) {
         // collection doesn't exist yet, add it with doc and 'new' flag
-        newState = _.clone(state);
-        newState[collection] = { [id]: fields };
-        return newState;
+        return { ...state, [collection]: { [id]: fields } };
       } else if (!state[collection][id]) {
         // no doc with _id exists yet, add it
-        newState = _.clone(state);
-        newState[collection][id] = fields;
-        return newState;
+        const tmpCollection = _.cloneDeep(state[collection]);
+        tmpCollection[id] = fields;
+        return { ...state, [collection]: tmpCollection };
       } else if (state[collection] && state[collection][id]) {
         // duplicate found, update it
         // console.warn(`${id} not added to ${collection}, duplicate found`);
         if (_.isEqual(state[collection][id], fields)) return state;
-        newState = _.clone(state);
-        newState[collection][id] = { ...state[collection][id], ...fields };
-        return newState;
+        const tmpCollection = _.cloneDeep(state[collection]);
+        tmpCollection[id] = fields;
+        return { ...state, [collection]: tmpCollection };
       }
       return state;
     }
     case 'CHANGED': {
-      const newState = _.clone(state);
-      newState[collection][id] = _.merge(state[collection][id], fields);
-      return newState;
+      const tmpCollection = _.cloneDeep(state[collection]);
+      tmpCollection[id] = _.merge(tmpCollection[id], fields);
+      return { ...state, [collection]: tmpCollection };
     }
     case 'REMOVED':
       if (state[collection][id]) {
-        const newState = _.clone(state);
-        delete newState[collection][id];
-        return newState;
+        const tmpCollection = _.cloneDeep(state[collection]);
+        delete tmpCollection[id];
+        return { ...state, [collection]: tmpCollection };
       }
       // console.error(`Couldn't remove ${id}, not found in ${collection} collection`);
       return state;
@@ -77,12 +72,12 @@ const meteorReduxReducers = (
     case 'REMOVE_AFTER_RECONNECT':
       // todo: check for removed docs
       const { removed } = action;
-      const newState = _.clone(state);
-      _.set(newState, `reactNativeMeteorOfflineRecentlyAdded.${collection}`, []);
-      newState[collection] = _.omit(newState[collection], removed);
-      console.log('collection now contains ', _.size(newState[collection]));
+      let tmpReactNativeMeteorOfflineRecentlyAdded = _.cloneDeep(state.reactNativeMeteorOfflineRecentlyAdded);
+      _.set(tmpReactNativeMeteorOfflineRecentlyAdded, `${collection}`, []);
+      let tmpCollection = _.cloneDeep(state[collection]);
+      tmpCollection = _.omit(tmpCollection, removed);
       getData().db[collection].remove({ _id: { $in: removed } });
-      return newState;
+      return { ...state, [collection]: tmpCollection, reactNativeMeteorOfflineRecentlyAdded: tmpReactNativeMeteorOfflineRecentlyAdded };
     case 'persist/REHYDRATE':
       if (
         typeof Meteor.ddp === 'undefined' ||
@@ -270,7 +265,7 @@ class MeteorOffline {
   }
   collection(collection, subscriptionName) {
     if (
-      Meteor.status().connected &&  
+      Meteor.status().connected &&
       this.firstConnection &&
       _.get(this.subscriptions, `${subscriptionName}.ready`)
     ) {
