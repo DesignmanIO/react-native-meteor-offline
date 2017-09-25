@@ -14,10 +14,8 @@ const meteorReduxReducers = (
 ) => {
   const { type, collection, id, fields } = action;
   switch (type) {
-    case 'SET_USRID': {
-      const newState = _.clone(state);
-      newState.userId = id;
-      return newState;
+    case 'SET_USERID': {
+      return {...state, userId: id};
     }
     case 'RECENTLY_ADDED': {
       const newState = _.clone(state);
