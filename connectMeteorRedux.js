@@ -220,11 +220,8 @@ class MeteorOffline {
     });
   }
 
-  subStatus(uniqueName) {
-    return {
-      ready: this.subscriptions[uniqueName].ready, 
-      offline: this.offline
-    };
+  subReady (uniqueName) {
+    return this.subscriptions[uniqueName].ready && !this.offline;
   }
 
   user() {
