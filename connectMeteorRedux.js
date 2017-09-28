@@ -12,7 +12,7 @@ const meteorReduxReducers = (
   state = { reactNativeMeteorOfflineRecentlyAdded: [] },
   action
 ) => {
-  const { type, collection, id, fields } = action;
+  const { type, collection, id, fields, cleared } = action;
   // console.log(type);
   switch (type) {
     case 'SET_USERID': {
@@ -37,7 +37,10 @@ const meteorReduxReducers = (
     }
     case 'CHANGED': {
       // something's changed, add/update
-      if (_.isEqual(_.get(state, `${collection}.${id}`), fields)) return state;
+      if (cleared.length) {
+        const nextDoc = _.omit(state[collection][id], cleared);
+        return { ...state, [collection]: { ...state[collection], [id]: nextDoc } };
+      } else if (_.isEqual(_.get(state, `${collection}.${id}`), fields)) return state;
       return { ...state, [collection]: { ...state[collection], [id]: fields } };
     }
     case 'REMOVED':
@@ -128,15 +131,11 @@ const initMeteorRedux = (
       connected = false;
     });
     if (connected) {
-      Meteor.ddp.on('removed', (obj) => {
-        const { collection, id } = obj;
-        const fields = obj.fields || {};
+      Meteor.ddp.on('removed', ({ collection, id, fields = {} }) => {
         MeteorStore.dispatch({ type: 'REMOVED', collection, id, fields });
       });
-      Meteor.ddp.on('changed', (obj) => {
-        const { collection, id } = obj;
-        const fields = obj.fields || {};
-        MeteorStore.dispatch({ type: 'CHANGED', collection, id, fields });
+      Meteor.ddp.on('changed', ({ collection, id, fields = {}, cleared = [] }) => {
+        MeteorStore.dispatch({ type: 'CHANGED', collection, id, fields, cleared });
       });
       Meteor.ddp.on('added', (obj, ...args) => {
         const { collection, id } = obj;
