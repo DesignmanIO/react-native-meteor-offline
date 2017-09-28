@@ -3,7 +3,7 @@ import Home from '../routes/Home';
 import Details from '../routes/Details';
 import Profile from '../routes/Profile';
 import SignIn from '../routes/SignIn';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, View } from 'react-native';
 import { MO } from '../index';
 
 export const routes = {
@@ -27,7 +27,10 @@ export const routes = {
       renderRightButton() {
         return (
           <TouchableOpacity onPress={() => MO.persister.purge()}>
-            <Text>Purge Cache</Text>
+            <View>
+              <Text>{MO.subReady('detailsByParam') ? 'Sub ready' : 'Sub not ready'}</Text>
+              <Text>Purge Cache</Text>
+            </View>
           </TouchableOpacity>
         );
       },

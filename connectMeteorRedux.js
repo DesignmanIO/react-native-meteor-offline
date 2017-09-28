@@ -219,6 +219,11 @@ class MeteorOffline {
       }
     });
   }
+
+  subReady (uniqueName) {
+    return this.subscriptions[uniqueName].ready;
+  }
+
   user() {
     if (Meteor.user()) {
       this.store.dispatch({ type: 'SET_USERID', id: Meteor.userId() });
@@ -227,6 +232,7 @@ class MeteorOffline {
     const { userId } = this.store.getState();
     return Meteor.collection('users').findOne(userId);
   }
+
   subscribe(uniqueName, name, ...params) {
     const hasCallback = typeof params[params.length - 1] === 'function';
     const justParams = params.slice(0, params.length - 1);
@@ -260,6 +266,7 @@ class MeteorOffline {
     this.subscriptions[uniqueName].ready = subHandle.ready();
     return subHandle;
   }
+
   collection(collection, subscriptionName) {
     if (
       Meteor.status().connected &&
