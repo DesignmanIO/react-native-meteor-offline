@@ -1,5 +1,6 @@
 /**
  * Created by Julian on 12/30/16.
+ * Edited by Jaakko on 08/28/18.
  */
 import Meteor, { getData } from 'react-native-meteor';
 import { createStore, combineReducers } from 'redux';
@@ -96,7 +97,7 @@ const initMeteorRedux = (
   const newReducers = customReducers !== undefined
     ? combineReducers({ ...customReducers, meteorReduxReducers })
     : meteorReduxReducers;
-  const MeteorStore = createStore(newReducers, preloadedState, enhancer);
+  const MeteorStore = createStore(newReducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(), preloadedState, enhancer);
 
   MeteorStore.loaded = () => {
     meteorReduxEmitter.emit('rehydrated');
@@ -198,7 +199,7 @@ class MeteorOffline {
     if (!options.store) {
       this.store = initMeteorRedux(undefined, autoRehydrate());
     }
-    this.persister = persistStore(
+    this.persistor = persistStore(
       this.store,
       {
         storage: AsyncStorage,
@@ -231,6 +232,12 @@ class MeteorOffline {
     }
     const { userId } = this.store.getState();
     return Meteor.collection('users').findOne(userId);
+  }
+
+  reset() {
+    this.store.dispatch({ type: 'HARDRESET' });
+    this.persistor.purge();
+    console.log('performed meteor offline hard reset');
   }
 
   subscribe(uniqueName, name, ...params) {
