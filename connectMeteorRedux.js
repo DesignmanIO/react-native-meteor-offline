@@ -1,6 +1,5 @@
 /**
  * Created by Julian on 12/30/16.
- * Edited by Jaakko on 08/28/18.
  */
 import Meteor, { getData } from 'react-native-meteor';
 import { createStore, combineReducers } from 'redux';
