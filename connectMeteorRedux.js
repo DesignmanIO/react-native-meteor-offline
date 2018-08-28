@@ -96,7 +96,7 @@ const initMeteorRedux = (
   const newReducers = customReducers !== undefined
     ? combineReducers({ ...customReducers, meteorReduxReducers })
     : meteorReduxReducers;
-  const MeteorStore = createStore(newReducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(), preloadedState, enhancer);
+  const MeteorStore = createStore(newReducers, preloadedState, enhancer);
 
   MeteorStore.loaded = () => {
     meteorReduxEmitter.emit('rehydrated');
