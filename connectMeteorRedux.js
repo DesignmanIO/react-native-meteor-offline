@@ -198,8 +198,7 @@ const returnCached = (cursor, store, collection, doDisable) => {
 
 const dateTransform = createTransform(null, (outboundState) => {
     return traverse(outboundState).map((val) => {
-        console.log(val);
-        if (moment(val).isValid()) {
+        if (moment(val, 'YYYY-MM-DD', false).isValid()) {
           return new Date(val);
         }
         return val;
@@ -255,7 +254,7 @@ class MeteorOffline {
   reset() {
     this.store.dispatch({ type: 'HARDRESET' });
     this.persistor.purge();
-    console.log('performed meteor offline hard reset');
+    //console.log('performed meteor offline hard reset');
   }
 
   subscribe(uniqueName, name, ...params) {
