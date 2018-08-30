@@ -188,6 +188,15 @@ const returnCached = (cursor, store, collection, doDisable) => {
   return cursor;
 };
 
+const dateTransform = createTransform(null, (outboundState) => {
+    return traverse(outboundState).map((val) => {
+        if (Time.isISOStringDate(val)) {
+            return new Date(val);
+        }
+        return val;
+    });
+});
+
 class MeteorOffline {
   constructor(options = {}) {
     this.offline = true;
@@ -204,6 +213,7 @@ class MeteorOffline {
         storage: AsyncStorage,
         debounce: options.debounce || 1000,
         blacklist: ['reactNativeMeteorOfflineRecentlyAdded'],
+        transforms: [dateTransform],
       },
       () => {
         this.store.loaded();
