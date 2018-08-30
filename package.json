@@ -35,6 +35,7 @@
     "redux": "^3.6.0",
     "redux-persist": "^4.0.1",
     "events": "^1.1.1",
-    "traverse": "^0.6.6"
+    "traverse": "^0.6.6",
+    "moment": "^2.22.2"
   }
 }

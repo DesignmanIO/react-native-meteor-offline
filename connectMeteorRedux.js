@@ -6,6 +6,7 @@ import { createStore, combineReducers } from 'redux';
 import { AsyncStorage } from 'react-native';
 import _ from 'lodash';
 import traverse from 'traverse';
+import moment from 'moment';
 import EventEmitter from 'events';
 import { persistStore, autoRehydrate, createTransform } from 'redux-persist';
 
@@ -198,8 +199,8 @@ const returnCached = (cursor, store, collection, doDisable) => {
 const dateTransform = createTransform(null, (outboundState) => {
     return traverse(outboundState).map((val) => {
         console.log(val);
-        if (typeof(val) == 'string' && Date.parse(val) !== NaN) {
-            return new Date(val);
+        if (moment(val).isValid()) {
+          return new Date(val);
         }
         return val;
     });
