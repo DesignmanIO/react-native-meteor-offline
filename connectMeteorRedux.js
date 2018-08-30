@@ -5,8 +5,6 @@ import Meteor, { getData } from 'react-native-meteor';
 import { createStore, combineReducers } from 'redux';
 import { AsyncStorage } from 'react-native';
 import _ from 'lodash';
-import traverse from 'traverse';
-import moment from 'moment';
 import EventEmitter from 'events';
 import { persistStore, autoRehydrate, createTransform } from 'redux-persist';
 
@@ -196,15 +194,6 @@ const returnCached = (cursor, store, collection, doDisable) => {
   return cursor;
 };
 
-const dateTransform = createTransform(null, (outboundState) => {
-    return traverse(outboundState).map((val) => {
-        if (moment(val, 'YYYY-MM-DD', false).isValid()) {
-          return new Date(val);
-        }
-        return val;
-    });
-});
-
 class MeteorOffline {
   constructor(options = {}) {
     this.offline = true;
@@ -221,7 +210,6 @@ class MeteorOffline {
         storage: AsyncStorage,
         debounce: options.debounce || 1000,
         blacklist: ['reactNativeMeteorOfflineRecentlyAdded'],
-        transforms: [dateTransform],
       },
       () => {
         this.store.loaded();
