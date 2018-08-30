@@ -5,6 +5,7 @@ import Meteor, { getData } from 'react-native-meteor';
 import { createStore, combineReducers } from 'redux';
 import { AsyncStorage } from 'react-native';
 import _ from 'lodash';
+import traverse from 'traverse';
 import EventEmitter from 'events';
 import { persistStore, autoRehydrate } from 'redux-persist';
 
