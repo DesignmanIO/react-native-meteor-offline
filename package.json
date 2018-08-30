@@ -34,6 +34,7 @@
     "react-native-meteor": "^1.0.3",
     "redux": "^3.6.0",
     "redux-persist": "^4.0.1",
-    "events": "^1.1.1"
+    "events": "^1.1.1",
+    "traverse": "0.6.6"
   }
 }
