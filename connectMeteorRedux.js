@@ -88,6 +88,7 @@ const meteorReduxReducers = (
 const meteorReduxEmitter = new EventEmitter();
 
 const initMeteorRedux = (
+  customDebugger = undefined,
   preloadedState = undefined,
   enhancer = undefined,
   customReducers = undefined
@@ -96,7 +97,12 @@ const initMeteorRedux = (
   const newReducers = customReducers !== undefined
     ? combineReducers({ ...customReducers, meteorReduxReducers })
     : meteorReduxReducers;
-  const MeteorStore = createStore(newReducers, preloadedState, enhancer);
+  const MeteorStore = createStore(
+    newReducers,
+    customDebugger,
+    preloadedState,
+    enhancer
+  );
 
   MeteorStore.loaded = () => {
     meteorReduxEmitter.emit('rehydrated');
@@ -205,7 +211,7 @@ class MeteorOffline {
     this.subscriptions = [];
     this.collections = [];
     if (!options.store) {
-      this.store = initMeteorRedux(undefined, autoRehydrate());
+      this.store = initMeteorRedux(options.debugger || undefined, undefined, autoRehydrate());
     }
     this.persistor = persistStore(
       this.store,
