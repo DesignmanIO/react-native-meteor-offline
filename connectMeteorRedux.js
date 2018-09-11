@@ -6,7 +6,7 @@ import { createStore, combineReducers } from 'redux';
 import { AsyncStorage } from 'react-native';
 import _ from 'lodash';
 import EventEmitter from 'events';
-import { persistStore, autoRehydrate } from 'redux-persist';
+import { persistStore, autoRehydrate, createTransform } from 'redux-persist';
 
 const meteorReduxReducers = (
   state = { reactNativeMeteorOfflineRecentlyAdded: [] },
@@ -88,6 +88,7 @@ const meteorReduxReducers = (
 const meteorReduxEmitter = new EventEmitter();
 
 const initMeteorRedux = (
+  customDebugger = undefined,
   preloadedState = undefined,
   enhancer = undefined,
   customReducers = undefined
@@ -96,7 +97,12 @@ const initMeteorRedux = (
   const newReducers = customReducers !== undefined
     ? combineReducers({ ...customReducers, meteorReduxReducers })
     : meteorReduxReducers;
-  const MeteorStore = createStore(newReducers, preloadedState, enhancer);
+  const MeteorStore = createStore(
+    newReducers,
+    customDebugger,
+    preloadedState,
+    enhancer
+  );
 
   MeteorStore.loaded = () => {
     meteorReduxEmitter.emit('rehydrated');
@@ -196,9 +202,9 @@ class MeteorOffline {
     this.subscriptions = [];
     this.collections = [];
     if (!options.store) {
-      this.store = initMeteorRedux(undefined, autoRehydrate());
+      this.store = initMeteorRedux(options.debugger || undefined, undefined, autoRehydrate());
     }
-    this.persister = persistStore(
+    this.persistor = persistStore(
       this.store,
       {
         storage: AsyncStorage,
@@ -231,6 +237,12 @@ class MeteorOffline {
     }
     const { userId } = this.store.getState();
     return Meteor.collection('users').findOne(userId);
+  }
+
+  reset() {
+    this.store.dispatch({ type: 'HARDRESET' });
+    this.persistor.purge();
+    //console.log('performed meteor offline hard reset');
   }
 
   subscribe(uniqueName, name, ...params) {
