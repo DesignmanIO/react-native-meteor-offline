@@ -64,7 +64,7 @@ const meteorReduxReducers = (
         state.reactNativeMeteorOfflineRecentlyAdded,
         removed
       );
-      getData().db[collection].remove({ _id: { $in: removed } });
+      if (getData().db[collection]) getData().db[collection].remove({ _id: { $in: removed } });
       return {
         ...state,
         reactNativeMeteorOfflineRecentlyAdded: withoutRemoved,
