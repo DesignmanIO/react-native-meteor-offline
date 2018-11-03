@@ -44,7 +44,7 @@ const meteorReduxReducers = (
       return { ...state, [collection]: { ...state[collection], [id]: fields } };
     }
     case 'REMOVED':
-      if (state[collection][id]) {
+      if (state[collection] && state[collection][id]) {
         const newState = _.clone(state);
         delete newState[collection][id];
         return newState;
