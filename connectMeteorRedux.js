@@ -201,9 +201,7 @@ class MeteorOffline {
     this.firstConnection = true;
     this.subscriptions = [];
     this.collections = [];
-    if (!options.store) {
-      this.store = initMeteorRedux(options.debugger || undefined, undefined, autoRehydrate());
-    }
+    this.store = options.store || initMeteorRedux(options.debugger || undefined, undefined, autoRehydrate());
     this.persistor = persistStore(
       this.store,
       {
