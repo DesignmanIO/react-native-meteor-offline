@@ -22,12 +22,13 @@ const meteorReduxReducers = (
       if (state.reactNativeMeteorOfflineRecentlyAdded === undefined || state.reactNativeMeteorOfflineRecentlyAdded.length === 0) {
         return {
           ...state,
-          reactNativeMeteorOfflineRecentlyAdded: [ id],
+          reactNativeMeteorOfflineRecentlyAdded: [ id ]
+         };
       } else {
         return {
           ...state,
           reactNativeMeteorOfflineRecentlyAdded: [
-            ...(state.reactNativeMeteorOfflineRecentlyAdded || []),
+            ...state.reactNativeMeteorOfflineRecentlyAdded,
             id,
           ],
         };
