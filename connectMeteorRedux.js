@@ -19,13 +19,19 @@ const meteorReduxReducers = (
       return { ...state, userId: id };
     }
     case 'RECENTLY_ADDED': {
-      return {
-        ...state,
-        reactNativeMeteorOfflineRecentlyAdded: [
-          ...(state.reactNativeMeteorOfflineRecentlyAdded || []),
-          id,
-        ],
-      };
+      if (state.reactNativeMeteorOfflineRecentlyAdded === undefined || state.reactNativeMeteorOfflineRecentlyAdded.length === 0) {
+        return {
+          ...state,
+          reactNativeMeteorOfflineRecentlyAdded: [ id],
+      } else {
+        return {
+          ...state,
+          reactNativeMeteorOfflineRecentlyAdded: [
+            ...(state.reactNativeMeteorOfflineRecentlyAdded || []),
+            id,
+          ],
+        };
+      }
     }
     case 'ADDED': {
       // doc and/or collection don't exist yet, add them
