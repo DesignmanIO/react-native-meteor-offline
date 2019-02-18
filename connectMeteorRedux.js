@@ -67,7 +67,7 @@ const meteorReduxReducers = (
     case 'REMOVE_AFTER_RECONNECT':
       // todo: check for removed docs
       const { removed } = action;
-      const withoutRemoved = _.omit(
+      const withoutRemoved = _.without(
         state.reactNativeMeteorOfflineRecentlyAdded,
         removed
       );
