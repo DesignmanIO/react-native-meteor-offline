@@ -1,7 +1,7 @@
 /**
  * Created by Julian on 12/30/16.
  */
-import Meteor, { getData } from 'react-native-meteor';
+import Meteor, { getData } from 'rn-meteor';
 import { createStore, combineReducers } from 'redux';
 import { AsyncStorage } from 'react-native';
 import _ from 'lodash';
@@ -19,11 +19,14 @@ const meteorReduxReducers = (
       return { ...state, userId: id };
     }
     case 'RECENTLY_ADDED': {
-      if (state.reactNativeMeteorOfflineRecentlyAdded === undefined || state.reactNativeMeteorOfflineRecentlyAdded.length === 0) {
+      if (
+        state.reactNativeMeteorOfflineRecentlyAdded === undefined ||
+        state.reactNativeMeteorOfflineRecentlyAdded.length === 0
+      ) {
         return {
           ...state,
-          reactNativeMeteorOfflineRecentlyAdded: [ id ]
-         };
+          reactNativeMeteorOfflineRecentlyAdded: [id],
+        };
       } else {
         return {
           ...state,
@@ -36,7 +39,8 @@ const meteorReduxReducers = (
     }
     case 'ADDED': {
       // doc and/or collection don't exist yet, add them
-      if (_.isEqual(_.get(state, `${collection}.${id}`, {}), fields)) return state;
+      if (_.isEqual(_.get(state, `${collection}.${id}`, {}), fields))
+        return state;
       return {
         ...state,
         [collection]: { ...state[collection], [id]: fields },
@@ -46,8 +50,12 @@ const meteorReduxReducers = (
       // something's changed, add/update
       if (cleared.length) {
         const nextDoc = _.omit(state[collection][id], cleared);
-        return { ...state, [collection]: { ...state[collection], [id]: nextDoc } };
-      } else if (_.isEqual(_.get(state, `${collection}.${id}`), fields)) return state;
+        return {
+          ...state,
+          [collection]: { ...state[collection], [id]: nextDoc },
+        };
+      } else if (_.isEqual(_.get(state, `${collection}.${id}`), fields))
+        return state;
       return { ...state, [collection]: { ...state[collection], [id]: fields } };
     }
     case 'REMOVED':
@@ -71,7 +79,8 @@ const meteorReduxReducers = (
         state.reactNativeMeteorOfflineRecentlyAdded,
         removed
       );
-      if (getData().db[collection]) getData().db[collection].remove({ _id: { $in: removed } });
+      if (getData().db[collection])
+        getData().db[collection].remove({ _id: { $in: removed } });
       return {
         ...state,
         reactNativeMeteorOfflineRecentlyAdded: withoutRemoved,
@@ -101,9 +110,10 @@ const initMeteorRedux = (
   customReducers = undefined
 ) => {
   // console.log(preloadedState, enhancer)
-  const newReducers = customReducers !== undefined
-    ? combineReducers({ ...customReducers, meteorReduxReducers })
-    : meteorReduxReducers;
+  const newReducers =
+    customReducers !== undefined
+      ? combineReducers({ ...customReducers, meteorReduxReducers })
+      : meteorReduxReducers;
   const MeteorStore = createStore(
     newReducers,
     customDebugger,
@@ -147,9 +157,18 @@ const initMeteorRedux = (
       Meteor.ddp.on('removed', ({ collection, id, fields = {} }) => {
         MeteorStore.dispatch({ type: 'REMOVED', collection, id, fields });
       });
-      Meteor.ddp.on('changed', ({ collection, id, fields = {}, cleared = [] }) => {
-        MeteorStore.dispatch({ type: 'CHANGED', collection, id, fields, cleared });
-      });
+      Meteor.ddp.on(
+        'changed',
+        ({ collection, id, fields = {}, cleared = [] }) => {
+          MeteorStore.dispatch({
+            type: 'CHANGED',
+            collection,
+            id,
+            fields,
+            cleared,
+          });
+        }
+      );
       Meteor.ddp.on('added', (obj, ...args) => {
         const { collection, id } = obj;
         // console.log('added', obj, args);
@@ -208,7 +227,13 @@ class MeteorOffline {
     this.firstConnection = true;
     this.subscriptions = [];
     this.collections = [];
-    this.store = options.store || initMeteorRedux(options.debugger || undefined, undefined, autoRehydrate());
+    this.store =
+      options.store ||
+      initMeteorRedux(
+        options.debugger || undefined,
+        undefined,
+        autoRehydrate()
+      );
     this.persistor = persistStore(
       this.store,
       {
@@ -231,7 +256,7 @@ class MeteorOffline {
     });
   }
 
-  subReady (uniqueName) {
+  subReady(uniqueName) {
     return this.subscriptions[uniqueName].ready && !this.offline;
   }
 
