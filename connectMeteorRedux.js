@@ -3,7 +3,7 @@
  */
 import Meteor, { getData } from 'react-native-meteor';
 import { createStore, combineReducers } from 'redux';
-import { AsyncStorage } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 import _ from 'lodash';
 import EventEmitter from 'events';
 import { persistStore, autoRehydrate, createTransform } from 'redux-persist';
